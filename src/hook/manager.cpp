@@ -139,6 +139,38 @@ Labels HookManager::masterLaunchTaskLabelDecorator(
   }
 }
 
+Environment HookManager::masterLaunchTaskEnvironmentDecorator(
+    const TaskInfo& taskInfo,
+    const FrameworkInfo& frameworkInfo,
+    const SlaveInfo& slaveInfo)
+{
+  synchronized (mutex) {
+    // We need a mutable copy of the task info and set the new
+    // env vars after each hook invocation. Otherwise, the last hook
+    // will be the only effective hook setting the env vars.
+    TaskInfo taskInfo_ = taskInfo;
+
+    foreachpair (const string& name, Hook* hook, availableHooks) {
+      const Result<Environment> result =
+        hook->masterLaunchTaskEnvironmentDecorator(
+            taskInfo_,
+            frameworkInfo,
+            slaveInfo);
+      // NOTE: If the hook returns None(), the task env vars won't be
+      // changed.
+      if (result.isSome()) {
+        taskInfo_.mutable_command()->mutable_environment()->CopyFrom(
+            result.get());
+      } else if (result.isError()) {
+        LOG(WARNING) << "Master environment decorator hook failed for module '"
+                    << name << "': " << result.error();
+      }
+    }
+
+    return taskInfo_.command().environment();
+  }
+}
+
 
 void HookManager::masterSlaveLostHook(const SlaveInfo& slaveInfo)
 {

@@ -53,6 +53,19 @@ public:
     return None();
   }
 
+  // This environment variable decorator hook is called from within
+  // master during the launchTask routine. A module implementing the
+  // hook creates and returns an Environment (containing environment
+  // variables). This environment is merged with the environment
+  // in the task info.
+  virtual Result<Environment> masterLaunchTaskEnvironmentDecorator(
+      const TaskInfo& taskInfo,
+      const FrameworkInfo& frameworkInfo,
+      const SlaveInfo& slaveInfo)
+  {
+    return None();
+  }
+
   // This label decorator hook is called from within the slave when
   // receiving a run task request from the master. A module
   // implementing the hook creates and returns a set of labels. These

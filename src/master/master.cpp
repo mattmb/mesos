@@ -4793,6 +4793,13 @@ void Master::_accept(
                       task,
                       framework->info,
                       slave->info));
+              message.mutable_task()
+                      ->mutable_command()
+                      ->mutable_environment()->CopyFrom(
+                  HookManager::masterLaunchTaskEnvironmentDecorator(
+                      task,
+                      framework->info,
+                      slave->info));
             }
 
             // If the agent does not support reservation refinement,
